@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ScamGuard — Risk Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..600,0..1,-50..200&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: "media",
+  theme: {
+    extend: {
+      colors: {
+        primary: "var(--c-primary)", "on-primary": "var(--c-on-primary)",
+        "primary-container": "var(--c-primary-container)", "on-primary-container": "var(--c-on-primary-container)",
+        secondary: "var(--c-secondary)", "on-secondary": "var(--c-on-secondary)",
+        "secondary-container": "var(--c-secondary-container)", "on-secondary-container": "var(--c-on-secondary-container)",
+        tertiary: "var(--c-tertiary)", "on-tertiary": "var(--c-on-tertiary)",
+        "tertiary-container": "var(--c-tertiary-container)", "on-tertiary-container": "var(--c-on-tertiary-container)",
+        error: "var(--c-error)", "on-error": "var(--c-on-error)",
+        "error-container": "var(--c-error-container)", "on-error-container": "var(--c-on-error-container)",
+        background: "var(--c-background)", "on-background": "var(--c-on-background)",
+        surface: "var(--c-surface)", "on-surface": "var(--c-on-surface)", "on-surface-variant": "var(--c-on-surface-variant)",
+        "surface-container-lowest": "var(--c-surface-container-lowest)",
+        "surface-container-low": "var(--c-surface-container-low)",
+        "surface-container": "var(--c-surface-container)",
+        "surface-container-high": "var(--c-surface-container-high)",
+        "surface-container-highest": "var(--c-surface-container-highest)",
+        outline: "var(--c-outline)", "outline-variant": "var(--c-outline-variant)"
+      },
+      fontFamily: { sans: ["Noto Sans", "sans-serif"] },
+      fontSize: {
+        "headline-lg-mobile": ["24px", { lineHeight: "34px", fontWeight: "700" }],
+        "headline-md": ["21px", { lineHeight: "30px", fontWeight: "700" }],
+        "title-lg": ["18px", { lineHeight: "26px", fontWeight: "600" }],
+        "label-lg": ["16px", { lineHeight: "22px", fontWeight: "600" }],
+        "label-md": ["13px", { lineHeight: "18px", fontWeight: "600" }],
+        "body-lg": ["17px", { lineHeight: "27px", fontWeight: "400" }],
+        "body-md": ["15px", { lineHeight: "23px", fontWeight: "500" }]
+      }
+    }
+  }
+};
+</script>
+<style>
+  :root {
+    --c-primary:#004532; --c-on-primary:#ffffff; --c-primary-container:#065f46; --c-on-primary-container:#8bd6b7;
+    --c-secondary:#904d00; --c-on-secondary:#ffffff; --c-secondary-container:#fe932c; --c-on-secondary-container:#663500;
+    --c-tertiary:#7f0008; --c-on-tertiary:#ffffff; --c-tertiary-container:#ab000f; --c-on-tertiary-container:#ffb5ad;
+    --c-error:#ba1a1a; --c-on-error:#ffffff; --c-error-container:#ffdad6; --c-on-error-container:#93000a;
+    --c-background:#f9f9ff; --c-on-background:#111c2d;
+    --c-surface:#f9f9ff; --c-on-surface:#111c2d; --c-on-surface-variant:#3f4944;
+    --c-surface-container-lowest:#ffffff; --c-surface-container-low:#f0f3ff; --c-surface-container:#e7eeff;
+    --c-surface-container-high:#dee8ff; --c-surface-container-highest:#d8e3fb;
+    --c-outline:#6f7973; --c-outline-variant:#bec9c2;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --c-primary:#8bd6b6; --c-on-primary:#003826; --c-primary-container:#00513b; --c-on-primary-container:#a6f2d1;
+      --c-secondary:#ffb77d; --c-on-secondary:#4c2700; --c-secondary-container:#6e3900; --c-on-secondary-container:#ffdcc3;
+      --c-tertiary:#ffb4ab; --c-on-tertiary:#690005; --c-tertiary-container:#93000a; --c-on-tertiary-container:#ffdad6;
+      --c-error:#ffb4ab; --c-on-error:#690005; --c-error-container:#93000a; --c-on-error-container:#ffdad6;
+      --c-background:#101a15; --c-on-background:#e1e3df;
+      --c-surface:#101a15; --c-on-surface:#e1e3df; --c-on-surface-variant:#bec9c2;
+      --c-surface-container-lowest:#0b1410; --c-surface-container-low:#182620; --c-surface-container:#1c2b24;
+      --c-surface-container-high:#26362e; --c-surface-container-highest:#314138;
+      --c-outline:#899289; --c-outline-variant:#3f4944;
+    }
+  }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: "Noto Sans", sans-serif; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; vertical-align: middle; }
+</style>
+</head>
+<body class="bg-background text-on-surface">
+
+<header class="sticky top-0 z-50 bg-surface/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.06)]">
+  <div class="bg-surface-container-high px-4 py-1.5">
+    <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse"></span>
+        <span id="statusLabel" class="text-label-md text-on-surface"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="stepsPill" class="hidden sm:inline-block px-3 py-0.5 rounded-full bg-surface-container-highest text-on-surface text-label-md tracking-wide"></span>
+        <a class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-tertiary-container text-on-tertiary text-label-md" href="tel:1930">
+          <span class="material-symbols-outlined text-[16px]">call</span>
+          <span id="helplineLabel"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2 min-w-0">
+      <svg width="30" height="34" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0" aria-hidden="true">
+        <path d="M15 1L28 6.5V16C28 24 22.5 30 15 33C7.5 30 2 24 2 16V6.5L15 1Z" fill="var(--c-primary)"/>
+        <path d="M9.5 16.5L13 20L20.5 12" stroke="var(--c-surface-container-lowest)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="flex flex-col min-w-0">
+        <span id="title" class="text-headline-md text-primary tracking-tight truncate">SCAMGUARD</span>
+        <span id="tagline" class="text-body-md text-on-surface-variant truncate text-xs"></span>
+      </div>
+    </div>
+    <div class="flex items-center rounded-lg bg-surface-container-low p-1 shrink-0">
+      <button id="langEn" onclick="setLang('en')" class="px-2.5 py-1 rounded text-label-md" type="button">EN</button>
+      <button id="langHi" onclick="setLang('hi')" class="px-2.5 py-1 rounded text-label-md" type="button">हिंदी</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 pt-8 pb-16 flex flex-col gap-6">
+  <div>
+    <h1 id="heroTitle" class="text-headline-lg-mobile text-on-surface"></h1>
+    <p id="heroSub" class="text-body-lg text-on-surface-variant mt-1"></p>
+  </div>
+
+  <div class="p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-3">
+    <textarea id="input" rows="5" class="w-full rounded-xl border border-outline-variant bg-surface p-3 text-body-lg text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+    <div id="samples" class="flex flex-wrap gap-2"></div>
+    <button id="checkBtn" onclick="runCheck()" class="w-full py-3.5 rounded-xl bg-primary text-on-primary text-label-lg shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"></button>
+  </div>
+
+  <div id="result" class="flex flex-col gap-4"></div>
+</main>
+
+<footer class="w-full bg-surface-container-low mt-8 shadow-[0_-1px_6px_rgba(0,0,0,0.04)]">
+  <div class="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-2">
+    <p id="footWarn" class="text-label-lg text-tertiary-container flex items-start gap-1.5"></p>
+    <p id="footDisc" class="text-body-md text-on-surface-variant"></p>
+  </div>
+</footer>
+
+<script>
+const SAMPLES = {
+  en: [
+    { label: "Fake KYC threat", text: "Dear customer, your KYC has expired. Your bank account will be blocked today. Complete verification immediately using this link: http://sbi-kyc-verify.xyz/update" },
+    { label: "Reward QR scam", text: "Congratulations! You have won Rs 5,000 cashback. Scan the QR code and enter your UPI PIN to receive your reward before it expires today." },
+    { label: "OTP call", text: "I am calling from your bank's fraud department. Your account will be frozen today. Please tell me the OTP you just received to verify your identity." },
+    { label: "Genuine bank message", text: "Your electricity bill of Rs 1,240 for October is due on the 15th. Pay through the official app or your nearest counter. No action needed if already paid." }
+  ],
+  hi: [
+    { label: "फर्जी केवाईसी धमकी", text: "प्रिय ग्राहक, आपका केवाईसी समाप्त हो गया है। आज आपका बैंक खाता ब्लॉक कर दिया जाएगा। तुरंत इस लिंक से सत्यापन पूरा करें: http://sbi-kyc-verify.xyz/update" },
+    { label: "इनाम क्यूआर घोटाला", text: "बधाई हो! आपने 5000 रुपये कैशबैक जीता है। इनाम पाने के लिए क्यूआर कोड स्कैन करें और अपना यूपीआई पिन दर्ज करें।" },
+    { label: "ओटीपी कॉल", text: "मैं आपके बैंक के फ्रॉड विभाग से बोल रहा हूं। आज आपका खाता फ्रीज हो जाएगा। कृपया अभी मिला ओटीपी मुझे बताएं।" },
+    { label: "असली बैंक संदेश", text: "आपका अक्टूबर का बिजली बिल 1240 रुपये 15 तारीख को देय है। कृपया आधिकारिक ऐप या नज़दीकी काउंटर से भुगतान करें।" }
+  ]
+};
+
+const STR = {
+  en: {
+    title: "SCAMGUARD", langLabel: "हिंदी",
+    statusLabel: "Protection assistant: active",
+    stepsPill: "STOP → CHECK → VERIFY → PROTECT",
+    helplineLabel: "Cyber Helpline: 1930",
+    tagline: "Elderly digital safety assistant",
+    heroTitle: "Check a suspicious message",
+    heroSub: "Paste an SMS, WhatsApp message or call transcript. ScamGuard tells you what looks risky and what to do next.",
+    placeholder: "Paste the SMS, WhatsApp message or call transcript here...",
+    checkBtn: "Check this message", speak: "Read result aloud",
+    why: "Why?", whatNow: "What should you do?", empty: "Please paste a message first.",
+    footWarn: "Never share your OTP, UPI PIN or Net Banking password with a caller or an unverified link.",
+    footDisc: "Hackathon MVP — rule-based analysis only. No background monitoring, no data stored without consent.",
+    badges: { LOW: "LOW RISK", REVIEW: "REVIEW", HIGH: "HIGH RISK" },
+    actions: {
+      LOW: "No strong warning signs found. Still worth a quick check if anything feels off.",
+      REVIEW: "Some warning signs, but not enough to be sure. Verify independently before acting.",
+      HIGH: "Do not click, pay, reply or share any information. Verify through the organisation's official app or website, or ask someone you trust."
+    },
+    reasons: {
+      urgency: "The message creates urgency or a countdown to act.",
+      threat: "It threatens account blocking, freezing or legal action.",
+      otp: "It asks for an OTP, PIN, password or CVV — this should never be shared.",
+      payment: "It asks you to make a payment or scan a QR code to \"receive\" money.",
+      impersonation: "It claims to be from a bank, government office or official service.",
+      badlink: "The link uses a shortener, unusual domain or does not match the organisation named.",
+      none: "No specific warning signals were detected in the text."
+    }
+  },
+  hi: {
+    title: "SCAMGUARD", langLabel: "English",
+    statusLabel: "सुरक्षा सहायक: सक्रिय",
+    stepsPill: "रुकें → जांचें → सत्यापित करें → सुरक्षित करें",
+    helplineLabel: "साइबर हेल्पलाइन: 1930",
+    tagline: "बुजुर्ग सुरक्षा साथी",
+    heroTitle: "संदिग्ध संदेश जांचें",
+    heroSub: "एसएमएस, व्हाट्सएप संदेश या कॉल ट्रांसक्रिप्ट पेस्ट करें। ScamGuard बताएगा क्या जोखिम भरा है और आगे क्या करना है।",
+    placeholder: "एसएमएस, व्हाट्सएप संदेश या कॉल ट्रांसक्रिप्ट यहां पेस्ट करें...",
+    checkBtn: "यह संदेश जांचें", speak: "परिणाम सुनें",
+    why: "क्यों?", whatNow: "अब आपको क्या करना चाहिए?", empty: "कृपया पहले एक संदेश पेस्ट करें।",
+    footWarn: "कॉल करने वाले या असत्यापित लिंक के साथ अपना ओटीपी, यूपीआई पिन या पासवर्ड कभी साझा न करें।",
+    footDisc: "हैकाथॉन एमवीपी — केवल नियम-आधारित विश्लेषण। कोई गुप्त निगरानी नहीं, सहमति के बिना डेटा संग्रहीत नहीं।",
+    badges: { LOW: "कम जोखिम", REVIEW: "समीक्षा करें", HIGH: "उच्च जोखिम" },
+    actions: {
+      LOW: "कोई गंभीर चेतावनी संकेत नहीं मिला। फिर भी कुछ असामान्य लगे तो जांच लें।",
+      REVIEW: "कुछ चेतावनी संकेत मिले, लेकिन निश्चित होने के लिए पर्याप्त नहीं। कार्रवाई से पहले स्वतंत्र रूप से सत्यापित करें।",
+      HIGH: "क्लिक न करें, भुगतान न करें, जवाब न दें और कोई जानकारी साझा न करें। संगठन के आधिकारिक ऐप या वेबसाइट से सत्यापित करें, या किसी भरोसेमंद व्यक्ति से पूछें।"
+    },
+    reasons: {
+      urgency: "संदेश जल्दबाज़ी या तुरंत कार्रवाई का दबाव बना रहा है।",
+      threat: "यह खाता ब्लॉक, फ्रीज़ या कानूनी कार्रवाई की धमकी दे रहा है।",
+      otp: "यह ओटीपी, पिन, पासवर्ड या सीवीवी मांग रहा है — यह कभी साझा नहीं करना चाहिए।",
+      payment: "यह भुगतान करने या इनाम पाने के लिए क्यूआर कोड स्कैन करने को कह रहा है।",
+      impersonation: "यह किसी बैंक, सरकारी कार्यालय या आधिकारिक सेवा से होने का दावा कर रहा है।",
+      badlink: "लिंक शॉर्टनर या असामान्य डोमेन का उपयोग कर रहा है, या बताए गए संगठन से मेल नहीं खाता।",
+      none: "पाठ में कोई विशेष चेतावनी संकेत नहीं मिला।"
+    }
+  }
+};
+
+let lang = "en";
+
+const RULES = [
+  { key: "urgency", weight: 2, re: /(immediately|urgent|within.*(hour|minute)|act now|today only|expire|तुरंत|आज ही|अभी)/i },
+  { key: "threat", weight: 2, re: /(block|suspend|freeze|deactivat|legal action|ब्लॉक|फ्रीज़|निलंबित)/i },
+  { key: "otp", weight: 4, re: /(otp|one.?time.?password|\bpin\b|cvv|password|ओटीपी|पिन|पासवर्ड)/i },
+  { key: "payment", weight: 3, re: /(pay|transfer|upi|scan.*qr|cashback|won|reward|भुगतान|यूपीआई|क्यूआर|इनाम|जीता)/i },
+  { key: "impersonation", weight: 1, re: /(bank|kyc|rbi|income tax|customs|courier|govt|government|बैंक|केवाईसी|सरकार)/i }
+];
+
+function checkLink(text) {
+  const m = text.match(/https?:\/\/[^\s]+/i);
+  if (!m) return { flagged: false };
+  const url = m[0];
+  const officialHints = /(onlinesbi|hdfcbank\.com|icicibank\.com|indiapost\.gov\.in)/i;
+  const badHints = /(bit\.ly|tinyurl|xn--|\d+\.\d+\.\d+\.\d+|\.xyz|\.top|\.info|-verify|-update)/i;
+  if (officialHints.test(url)) return { flagged: false };
+  if (badHints.test(url)) return { flagged: true };
+  return { flagged: false };
+}
+
+function analyse(text) {
+  const s = STR[lang];
+  let score = 0;
+  const hit = {};
+  RULES.forEach(r => { if (r.re.test(text)) { hit[r.key] = true; score += r.weight; } });
+  const link = checkLink(text);
+  if (link.flagged) { hit.badlink = true; score += 2; }
+
+  let risk = "LOW";
+  if (score >= 6) risk = "HIGH";
+  else if (score >= 3) risk = "REVIEW";
+  if (hit.otp && (hit.impersonation || hit.urgency || hit.threat)) risk = "HIGH";
+  if (hit.payment && hit.badlink) risk = "HIGH";
+
+  const reasonKeys = Object.keys(hit);
+  const reasons = reasonKeys.length ? reasonKeys.map(k => s.reasons[k]) : [s.reasons.none];
+  return { risk, reasons };
+}
+
+function renderSamples() {
+  const box = document.getElementById("samples");
+  box.innerHTML = "";
+  SAMPLES[lang].forEach(sample => {
+    const b = document.createElement("button");
+    b.className = "px-3 py-1.5 rounded-full border border-outline-variant text-on-surface-variant text-label-md hover:bg-surface-container-high hover:text-on-surface";
+    b.textContent = sample.label;
+    b.type = "button";
+    b.onclick = () => { document.getElementById("input").value = sample.text; };
+    box.appendChild(b);
+  });
+}
+
+function applyLang() {
+  const s = STR[lang];
+  document.getElementById("title").textContent = s.title;
+  document.getElementById("tagline").textContent = s.tagline;
+  document.getElementById("statusLabel").textContent = s.statusLabel;
+  document.getElementById("stepsPill").textContent = s.stepsPill;
+  document.getElementById("helplineLabel").textContent = s.helplineLabel;
+  document.getElementById("heroTitle").textContent = s.heroTitle;
+  document.getElementById("heroSub").textContent = s.heroSub;
+  document.getElementById("input").placeholder = s.placeholder;
+  document.getElementById("checkBtn").textContent = s.checkBtn;
+  document.getElementById("footDisc").textContent = s.footDisc;
+  document.getElementById("footWarn").innerHTML =
+    '<span class="material-symbols-outlined text-[18px]">warning</span><span>' + s.footWarn + '</span>';
+
+  const en = document.getElementById("langEn"), hi = document.getElementById("langHi");
+  const activeCls = "px-2.5 py-1 rounded text-label-md bg-primary text-on-primary";
+  const inactiveCls = "px-2.5 py-1 rounded text-label-md text-on-surface-variant";
+  en.className = lang === "en" ? activeCls : inactiveCls;
+  hi.className = lang === "hi" ? activeCls : inactiveCls;
+
+  document.documentElement.lang = lang === "hi" ? "hi" : "en";
+  renderSamples();
+  document.getElementById("result").innerHTML = "";
+}
+
+function setLang(l) { lang = l; applyLang(); }
+
+function speak(text) {
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === "hi" ? "hi-IN" : "en-IN";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  } catch (e) { /* speech not available */ }
+}
+
+const BADGE_STYLE = {
+  LOW: "bg-primary-container text-on-primary-container",
+  REVIEW: "bg-secondary-container text-on-secondary-container",
+  HIGH: "bg-tertiary-container text-on-tertiary"
+};
+const BADGE_ICON = { LOW: "check_circle", REVIEW: "help", HIGH: "warning" };
+
+function runCheck() {
+  const s = STR[lang];
+  const text = document.getElementById("input").value.trim();
+  const box = document.getElementById("result");
+  if (!text) {
+    box.innerHTML = '<div class="p-4 rounded-xl bg-surface-container-lowest text-on-surface-variant text-body-md">' + s.empty + '</div>';
+    return;
+  }
+
+  const { risk, reasons } = analyse(text);
+  const actionText = s.actions[risk];
+  const reasonList = reasons.map(r => '<li>' + r + '</li>').join("");
+  const speakText = s.badges[risk] + '. ' + actionText;
+
+  box.innerHTML = `
+    <span class="w-fit inline-flex items-center gap-2 px-4 py-2 rounded-full text-label-lg ${BADGE_STYLE[risk]}">
+      <span class="material-symbols-outlined text-[20px]">${BADGE_ICON[risk]}</span>${s.badges[risk]}
+    </span>
+    <div class="p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-2">
+      <div class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined">search</span>
+      </div>
+      <h3 class="text-title-lg text-on-surface">${s.why}</h3>
+      <ul class="list-disc pl-5 text-body-md text-on-surface-variant">${reasonList}</ul>
+    </div>
+    <div class="p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-2">
+      <div class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined">shield</span>
+      </div>
+      <h3 class="text-title-lg text-on-surface">${s.whatNow}</h3>
+      <p class="text-body-lg text-on-surface font-semibold">${actionText}</p>
+      <button onclick='speak(${JSON.stringify(speakText)})' class="inline-flex w-fit items-center gap-2 mt-1 px-3 py-2 rounded-lg border border-outline-variant text-on-surface text-label-md" type="button">
+        <span class="material-symbols-outlined text-[18px]">volume_up</span>${s.speak}
+      </button>
+    </div>`;
+}
+
+applyLang();
+</script>
+</body>
+</html>

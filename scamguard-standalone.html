@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ScamGuard - Before you click, pay, or share</title>
+<style>
+/* ---------------------------------------------------------------------
+   ScamGuard - design tokens (ported verbatim from the real project's
+   style.css - deep guardian teal + warm marigold, Atkinson Hyperlegible)
+--------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --bg: #F7F5EF; --surface: #FFFFFF; --surface-tint: #EAF1EC;
+  --ink: #1E2A24; --ink-soft: #4B564F; --border: #D8D2C4;
+  --primary: #0F4C42; --primary-dark: #0B3A32; --accent: #D98C15;
+  --low: #1E8E5A; --low-bg: #E9F6EF;
+  --review: #C1720C; --review-bg: #FBF0DE;
+  --high: #B3261E; --high-bg: #FBEAE9;
+  --radius-lg: 20px; --radius-md: 14px; --radius-sm: 8px;
+  --shadow: 0 2px 10px rgba(15, 76, 66, 0.08);
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#101613; --surface:#182420; --surface-tint:#1E2F27;
+    --ink:#E7F1EC; --ink-soft:#AFC2B9; --border:#33453C;
+    --low-bg:#123322; --review-bg:#2E210A; --high-bg:#341413;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font); font-size:18px; line-height:1.5; height:100%; }
+body { min-height:100vh; display:flex; justify-content:center; }
+.app { width:100%; max-width:640px; min-height:100vh; background:var(--surface);
+  box-shadow:var(--shadow); display:flex; flex-direction:column; }
+
+header.top { padding:calc(28px + env(safe-area-inset-top,0px)) 24px 20px;
+  background:var(--primary); color:#fff; border-radius:0 0 var(--radius-lg) var(--radius-lg); }
+.brand-row { display:flex; align-items:center; justify-content:space-between; }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-icon { width:42px; height:42px; flex-shrink:0; }
+.brand-name { font-size:26px; font-weight:700; letter-spacing:0.2px; }
+.tagline { margin-top:10px; font-size:16px; color:#DCEDE6; }
+.lang-toggle { display:flex; border:1.5px solid rgba(255,255,255,0.55); border-radius:999px; overflow:hidden; flex-shrink:0; }
+.lang-toggle button { border:none; background:transparent; color:#fff; padding:7px 14px; font-family:var(--font); font-size:14px; cursor:pointer; }
+.lang-toggle button.active { background:var(--accent); color:var(--primary-dark); font-weight:700; }
+
+main { padding:20px; flex:1; }
+.mode-list { display:flex; flex-direction:column; gap:12px; margin-bottom:22px; }
+.mode-btn { display:flex; align-items:center; gap:14px; width:100%; padding:18px;
+  border-radius:var(--radius-md); border:2px solid var(--border); background:var(--surface);
+  font-family:var(--font); font-size:19px; font-weight:700; color:var(--ink); cursor:pointer;
+  text-align:left; transition:border-color .15s ease, background .15s ease; }
+.mode-btn .icon { font-size:26px; width:34px; text-align:center; flex-shrink:0; }
+.mode-btn.active { border-color:var(--primary); background:var(--surface-tint); color:var(--primary-dark); }
+.mode-btn:focus-visible, button:focus-visible, input:focus-visible, label.upload-box:focus-within {
+  outline:3px solid var(--accent); outline-offset:2px; }
+
+.panel { border-radius:var(--radius-lg); background:var(--surface-tint); padding:20px; margin-bottom:20px; }
+.panel textarea, .panel input[type="text"], .panel input[type="url"] {
+  width:100%; font-family:var(--font); font-size:18px; padding:14px; border-radius:var(--radius-sm);
+  border:2px solid var(--border); background:#fff; resize:vertical; min-height:110px; }
+.panel input[type="text"], .panel input[type="url"] { min-height:unset; }
+.upload-box { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  border:2.5px dashed var(--primary); border-radius:var(--radius-md); background:#fff; padding:34px 16px;
+  cursor:pointer; text-align:center; color:var(--primary-dark); font-weight:700; position:relative; }
+.upload-box input[type="file"] { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.upload-box .icon { font-size:34px; }
+.upload-preview { margin-top:14px; max-width:100%; border-radius:var(--radius-sm); border:1px solid var(--border); }
+
+.primary-btn { width:100%; margin-top:16px; padding:16px; border:none; border-radius:var(--radius-md);
+  background:var(--primary); color:#fff; font-family:var(--font); font-size:20px; font-weight:700; cursor:pointer; }
+.primary-btn:disabled { opacity:.6; cursor:not-allowed; }
+.primary-btn:hover:not(:disabled) { background:var(--primary-dark); }
+
+.result { border-radius:var(--radius-lg); padding:22px; margin-bottom:20px; animation:reveal .35s ease; }
+@media (prefers-reduced-motion: reduce) { .result { animation:none; } }
+@keyframes reveal { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+.result.LOW { background:var(--low-bg); border:2px solid var(--low); }
+.result.REVIEW { background:var(--review-bg); border:2px solid var(--review); }
+.result.HIGH { background:var(--high-bg); border:2px solid var(--high); }
+.badge { display:inline-flex; align-items:center; gap:10px; font-size:22px; font-weight:700;
+  padding:8px 16px; border-radius:999px; margin-bottom:16px; }
+.result.LOW .badge { background:var(--low); color:#fff; }
+.result.REVIEW .badge { background:var(--review); color:#fff; }
+.result.HIGH .badge { background:var(--high); color:#fff; }
+.result h3 { margin:14px 0 6px; font-size:17px; color:var(--ink-soft); }
+.result ul { margin:0 0 4px; padding-left:22px; }
+.result li { margin-bottom:6px; }
+.action-text { font-size:19px; font-weight:700; color:var(--ink); }
+.result-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.pill-btn { padding:10px 16px; border-radius:999px; border:2px solid var(--primary); background:#fff;
+  color:var(--primary-dark); font-family:var(--font); font-weight:700; font-size:15px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px; }
+.pill-btn:hover { background:var(--surface-tint); }
+.detected-text-box { margin-top:16px; background:rgba(255,255,255,0.6); border-radius:var(--radius-sm);
+  padding:12px 14px; font-size:15px; color:var(--ink-soft); white-space:pre-wrap; max-height:140px; overflow-y:auto; }
+.hidden { display:none !important; }
+footer.disclaimer { padding:16px 22px calc(26px + env(safe-area-inset-bottom,0px)); font-size:13px; color:var(--ink-soft); text-align:center; }
+.spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,0.5);
+  border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:8px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.error-text { color:var(--high); font-weight:700; margin-top:10px; }
+.note-text { color:var(--ink-soft); font-size:14px; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand-row">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 4 L42 11 V22 C42 33 34.5 41 24 44 C13.5 41 6 33 6 22 V11 Z" fill="#D98C15" stroke="#fff" stroke-width="2"/>
+          <path d="M17 24 L22 29 L32 18" stroke="#0B3A32" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name" data-i18n="app_name">ScamGuard</span>
+      </div>
+      <div class="lang-toggle">
+        <button id="lang-en" class="active" onclick="setLang('en')" type="button">EN</button>
+        <button id="lang-hi" onclick="setLang('hi')" type="button">हिंदी</button>
+      </div>
+    </div>
+    <p class="tagline" data-i18n="tagline">Before you click, pay, or share - check it here.</p>
+  </header>
+
+  <main>
+    <div class="mode-list" id="mode-list">
+      <button class="mode-btn active" data-mode="message" type="button"><span class="icon">💬</span><span data-i18n="tab_message">Check a Message</span></button>
+      <button class="mode-btn" data-mode="screenshot" type="button"><span class="icon">📷</span><span data-i18n="tab_screenshot">Check a Screenshot</span></button>
+      <button class="mode-btn" data-mode="url" type="button"><span class="icon">🔗</span><span data-i18n="tab_url">Check a Link</span></button>
+      <button class="mode-btn" data-mode="qr" type="button"><span class="icon">🔳</span><span data-i18n="tab_qr">Check a QR Code</span></button>
+      <button class="mode-btn" data-mode="call" type="button"><span class="icon">📞</span><span data-i18n="tab_call">Check a Call</span></button>
+    </div>
+
+    <div class="panel" id="panel-message">
+      <textarea id="input-message" data-i18n-placeholder="placeholder_message" placeholder="Paste the message you received here..."></textarea>
+    </div>
+
+    <div class="panel hidden" id="panel-screenshot">
+      <label class="upload-box" for="file-screenshot">
+        <span class="icon">📷</span>
+        <span data-i18n="upload_hint">Tap to upload a photo or screenshot</span>
+        <input type="file" id="file-screenshot" accept="image/*">
+      </label>
+      <img id="preview-screenshot" class="upload-preview hidden" alt="Selected screenshot preview">
+      <p class="note-text">OCR runs fully in your browser (loads a small text-recognition library on first use).</p>
+    </div>
+
+    <div class="panel hidden" id="panel-url">
+      <input type="url" id="input-url" data-i18n-placeholder="placeholder_url" placeholder="Paste the website link here...">
+    </div>
+
+    <div class="panel hidden" id="panel-qr">
+      <label class="upload-box" for="file-qr">
+        <span class="icon">🔳</span>
+        <span data-i18n="upload_hint">Tap to upload a photo or screenshot</span>
+        <input type="file" id="file-qr" accept="image/*">
+      </label>
+      <img id="preview-qr" class="upload-preview hidden" alt="Selected QR code preview">
+    </div>
+
+    <div class="panel hidden" id="panel-call">
+      <textarea id="input-call" data-i18n-placeholder="placeholder_call" placeholder="Type or paste what the caller said..."></textarea>
+    </div>
+
+    <button class="primary-btn" id="check-btn" onclick="runCheck()" data-i18n="button_check" type="button">Check This Now</button>
+    <div id="result-region" aria-live="polite"></div>
+  </main>
+
+  <footer class="disclaimer" data-i18n="footer_note">
+    ScamGuard gives guidance based on available evidence. It is not a guarantee.
+    When unsure, always verify through an official source.
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+/* =====================================================================
+   ScamGuard - standalone build.
+   Everything below is a direct client-side port of the real backend:
+   risk_engine.py + url_utils.py + qr_utils.py + i18n.py.
+   No server, no /api calls, no /assets paths - runs from a single file.
+   ===================================================================== */
+
+const STRINGS = {
+  en: {
+    app_name: "ScamGuard", tagline: "Before you click, pay, or share - check it here.",
+    tab_message: "Check a Message", tab_screenshot: "Check a Screenshot",
+    tab_url: "Check a Link", tab_qr: "Check a QR Code", tab_call: "Check a Call",
+    placeholder_message: "Paste the message you received here...",
+    placeholder_url: "Paste the website link here...",
+    placeholder_call: "Type or paste what the caller said...",
+    upload_hint: "Tap to upload a photo or screenshot", button_check: "Check This Now",
+    result_low: "LOW RISK", result_review: "REVIEW", result_high: "HIGH RISK",
+    why_heading: "Why?", action_heading: "What should I do?",
+    no_signals: "No specific warning signs were detected in the text provided.",
+    read_aloud: "Read Aloud", stop_reading: "Stop", ask_trusted: "Ask a Trusted Person",
+    trusted_intro: "ScamGuard checked something for me. Result:",
+    footer_note: "ScamGuard gives guidance based on available evidence. It is not a guarantee. When unsure, always verify through an official source.",
+    detected_text: "Text we analysed", no_qr_found: "We couldn't find a QR code in that image. Try a clearer photo.",
+    upi_detected: "This QR code is a UPI payment request.", upi_payee: "Paying to", upi_amount: "Amount",
+    ocr_running: "Reading text from the image...", ocr_failed: "Could not read this image in-browser. Try pasting the message text instead.",
+  },
+  hi: {
+    app_name: "ScamGuard", tagline: "क्लिक करने, भुगतान करने या साझा करने से पहले - यहाँ जाँच करें।",
+    tab_message: "संदेश जांचें", tab_screenshot: "स्क्रीनशॉट जांचें",
+    tab_url: "लिंक जांचें", tab_qr: "QR कोड जांचें", tab_call: "कॉल जांचें",
+    placeholder_message: "आपको मिला संदेश यहाँ चिपकाएँ...",
+    placeholder_url: "वेबसाइट लिंक यहाँ चिपकाएँ...",
+    placeholder_call: "कॉल करने वाले ने जो कहा वह टाइप करें...",
+    upload_hint: "फोटो या स्क्रीनशॉट अपलोड करने के लिए टैप करें", button_check: "अभी जांचें",
+    result_low: "कम जोखिम", result_review: "समीक्षा करें", result_high: "उच्च जोखिम",
+    why_heading: "क्यों?", action_heading: "मुझे क्या करना चाहिए?",
+    no_signals: "दिए गए टेक्स्ट में कोई खास चेतावनी संकेत नहीं मिला।",
+    read_aloud: "ज़ोर से पढ़ें", stop_reading: "रोकें", ask_trusted: "भरोसेमंद व्यक्ति से पूछें",
+    trusted_intro: "ScamGuard ने मेरे लिए कुछ जांचा। परिणाम:",
+    footer_note: "ScamGuard उपलब्ध जानकारी के आधार पर सलाह देता है। यह गारंटी नहीं है। अनिश्चित होने पर हमेशा किसी आधिकारिक स्रोत से पुष्टि करें।",
+    detected_text: "हमने जिस टेक्स्ट का विश्लेषण किया", no_qr_found: "हमें उस तस्वीर में कोई QR कोड नहीं मिला। एक स्पष्ट फोटो आज़माएँ।",
+    upi_detected: "यह QR कोड एक UPI भुगतान अनुरोध है।", upi_payee: "भुगतान किसे", upi_amount: "राशि",
+    ocr_running: "तस्वीर से टेक्स्ट पढ़ा जा रहा है...", ocr_failed: "यह तस्वीर ब्राउज़र में नहीं पढ़ी जा सकी। कृपया संदेश टेक्स्ट पेस्ट करें।",
+  }
+};
+
+// ---- risk_engine.py ported: pattern groups, weights, thresholds -------
+const PATTERN_GROUPS = {
+  urgency: [/\bwithin\s+\d+\s*(minutes?|mins?|hours?|hrs?)\b/i, /\bimmediately\b/i, /\burgent(ly)?\b/i,
+    /\btoday only\b/i, /\bact now\b/i, /\bexpires? (today|soon|shortly)\b/i, /\blast (chance|warning)\b/i,
+    /\bfinal notice\b/i, /\b(within|in)\s+\d+\s*hours?\b/i],
+  threat: [/\baccount (will be|shall be|is going to be)?\s*(blocked|frozen|suspended|deactivated|closed)\b/i,
+    /\bblocked (today|within)\b/i, /\bsim (will be)?\s*(deactivated|blocked|disconnected)\b/i,
+    /\bconnection will be disconnected\b/i, /\blegal action\b/i, /\bpenalty\b/i, /\bfine of\b/i,
+    /\bkyc (has|is)?\s*expired\b/i, /\bkyc will expire\b/i, /\bcard will be blocked\b/i],
+  impersonation: [/\bwe are calling from your bank\b/i, /\bi am calling from\b/i, /\bcalling from (your )?bank\b/i,
+    /\bgovernment (department|official)\b/i, /\bincome tax department\b/i, /\brbi\b/i, /\btrai\b/i,
+    /\bcourier (company|department)\b/i, /\bcustomer (support|care) (executive|agent)\b/i,
+    /\btelecom (department|provider|operator)\b/i, /\bbank (executive|representative|official)\b/i,
+    /\bfrom (paytm|phonepe|google pay|amazon|flipkart) support\b/i],
+  otp_pin: [/\botp\b/i, /\bupi pin\b/i, /\bpin number\b/i, /\bcvv\b/i, /\bone[\s-]?time password\b/i,
+    /\btell me the (otp|pin|code)\b/i, /\bshare (your |the )?(otp|pin|password|cvv)\b/i,
+    /\bverification code\b/i, /\bshare.{0,15}code you (just )?received\b/i],
+  payment: [/\bpay (immediately|now|to receive)\b/i, /\bcomplete (the )?payment\b/i,
+    /\benter your (upi )?pin to (receive|claim|get)\b/i, /\bprocessing fee\b/i, /\brefund fee\b/i,
+    /\bunlock (your )?(reward|prize|money)\b/i, /\bscan (this|the) qr code\b/i, /\btransfer (money|funds|amount)\b/i],
+  reward: [/\bcongratulations\b/i, /\byou (have )?won\b/i, /\blucky (draw|winner)\b/i, /\bcashback of\b/i,
+    /\bclaim your (reward|prize|gift)\b/i, /\bfree (gift|reward)\b/i],
+  link_action: [/\bclick (here|this|the link|below)\b/i, /\b(using|via|through) (this|the) link\b/i,
+    /\bcomplete verification\b.{0,30}\blink\b/i, /\bvisit (this|the) link\b/i,
+    /\bupdate (your )?details?\b.{0,20}\blink\b/i, /\bdownload (this )?(app|apk)\b.{0,20}(here|now|link)\b/i],
+  sensitive_info: [/\baadhaar\b/i, /\bpan (card|number)\b/i, /\bbank account number\b/i, /\bpassword\b/i,
+    /\bidentity proof\b/i, /\bdate of birth\b/i],
+};
+
+const WEIGHTS = { urgency:12, threat:15, impersonation:10, otp_pin:30, payment:20, reward:10, link_action:12,
+  sensitive_info:15, url_mismatch:30, url_shortener:12, url_no_https:6, url_ip_host:20, url_many_subdomains:10 };
+const THRESHOLD_REVIEW = 20, THRESHOLD_HIGH = 45;
+
+const WHY_TEXT = {
+  urgency: ["The message creates urgency, pressuring you to act fast.", "यह संदेश जल्दी करने का दबाव बना रहा है।"],
+  threat: ["It threatens a consequence, like blocking your account or SIM.", "यह धमकी देता है, जैसे खाता या सिम बंद करना।"],
+  impersonation: ["The sender claims to represent a bank, government office, or company.", "भेजने वाला बैंक, सरकारी विभाग या कंपनी होने का दावा कर रहा है।"],
+  otp_pin: ["It asks for an OTP, UPI PIN, password, or verification code.", "यह OTP, UPI पिन, पासवर्ड या सत्यापन कोड मांग रहा है।"],
+  payment: ["It asks you to make a payment or enter your PIN to 'receive' something.", "यह भुगतान करने या कुछ 'पाने' के लिए पिन डालने को कह रहा है।"],
+  reward: ["It offers an unexpected prize, cashback, or reward.", "यह एक अप्रत्याशित इनाम या कैशबैक देने का दावा करता है।"],
+  link_action: ["It pushes you to click a link or download something right away.", "यह तुरंत लिंक पर क्लिक करने या कुछ डाउनलोड करने को कह रहा है।"],
+  sensitive_info: ["It asks for sensitive personal or financial information.", "यह संवेदनशील व्यक्तिगत या वित्तीय जानकारी मांग रहा है।"],
+  url_mismatch: ["The website address does not match the organisation it claims to be.", "वेबसाइट का पता उस संस्था से मेल नहीं खाता जिसका वह दावा करता है।"],
+  url_shortener: ["The link uses a URL shortener, which can hide the real destination.", "यह लिंक एक छोटा किया गया URL है, जो असली पता छुपा सकता है।"],
+  url_no_https: ["The website does not use a secure (https) connection.", "यह वेबसाइट सुरक्षित (https) कनेक्शन का उपयोग नहीं करती।"],
+  url_ip_host: ["The link points to a raw number-based address instead of a normal website name.", "यह लिंक सामान्य वेबसाइट नाम की बजाय सीधे नंबर-आधारित पते पर जाता है।"],
+  url_many_subdomains: ["The web address has an unusually complicated structure.", "इस वेब पते की संरचना असामान्य रूप से जटिल है।"],
+};
+
+const URL_SHORTENERS = new Set(["bit.ly","tinyurl.com","t.co","goo.gl","is.gd","cutt.ly","rb.gy","shorturl.at","tiny.cc","ow.ly","buff.ly"]);
+const KNOWN_ORG_DOMAINS = {
+  "sbi": ["onlinesbi.sbi","sbi.co.in"], "icici": ["icicibank.com"], "hdfc": ["hdfcbank.com"],
+  "axis": ["axisbank.com"], "pnb": ["pnbindia.in"], "rbi": ["rbi.org.in"], "income tax": ["incometax.gov.in"],
+  "irctc": ["irctc.co.in"], "paytm": ["paytm.com"], "phonepe": ["phonepe.com"], "google pay": ["pay.google.com"],
+  "amazon": ["amazon.in","amazon.com"], "flipkart": ["flipkart.com"], "india post": ["indiapost.gov.in"],
+};
+
+function sig(id) { return { id, why_en: WHY_TEXT[id][0], why_hi: WHY_TEXT[id][1] }; }
+
+function nextAction(level, ids) {
+  if (level === "HIGH") {
+    if (ids.has("otp_pin")) return [
+      "Do not share the OTP, PIN, or password with anyone. End the call or ignore the message, then contact the organisation using the number on their official website or app.",
+      "OTP, पिन या पासवर्ड किसी के साथ साझा न करें। कॉल काटें या संदेश को नज़रअंदाज़ करें, फिर संस्था से उनकी आधिकारिक वेबसाइट या ऐप में दिए नंबर से संपर्क करें।"];
+    if (ids.has("payment") || ids.has("reward")) return [
+      "Do not make any payment or scan the QR code. Verify the offer independently through the organisation's official app or website.",
+      "कोई भुगतान न करें और QR कोड स्कैन न करें। संस्था के आधिकारिक ऐप या वेबसाइट से इसकी पुष्टि करें।"];
+    return [
+      "Do not click the link or share any information. Open the organisation's official app or website yourself and verify this message.",
+      "लिंक पर क्लिक न करें और कोई जानकारी साझा न करें। खुद संस्था की आधिकारिक ऐप या वेबसाइट खोलकर जांच करें।"];
+  }
+  if (level === "REVIEW") return [
+    "We found some warning signs, but not enough to be certain. Verify this through an official source before acting, or ask someone you trust.",
+    "हमें कुछ चेतावनी के संकेत मिले हैं, पर पूरी तरह निश्चित नहीं हैं। कार्रवाई करने से पहले किसी आधिकारिक स्रोत से पुष्टि करें, या किसी भरोसेमंद व्यक्ति से पूछें।"];
+  return [
+    "No major warning signs were found in what you shared. If anything still feels off, it's always fine to verify independently.",
+    "जो जानकारी आपने साझा की उसमें कोई बड़ा खतरे का संकेत नहीं मिला। फिर भी अगर कुछ असामान्य लगे, तो स्वतंत्र रूप से पुष्टि करना हमेशा ठीक है।"];
+}
+
+function finalize(score, found) {
+  score = Math.min(score, 100);
+  const level = score >= THRESHOLD_HIGH ? "HIGH" : score >= THRESHOLD_REVIEW ? "REVIEW" : "LOW";
+  const ids = new Set(found.map(s => s.id));
+  const [action_en, action_hi] = nextAction(level, ids);
+  return { risk_level: level, score, signals: found, action_en, action_hi };
+}
+
+function analyzeText(text, sourceType) {
+  text = text || ""; let score = 0; const found = []; const matched = new Set();
+  for (const [id, patterns] of Object.entries(PATTERN_GROUPS)) {
+    for (const re of patterns) {
+      if (re.test(text)) { if (!matched.has(id)) { score += WEIGHTS[id]; found.push(sig(id)); matched.add(id); } break; }
+    }
+  }
+  if (sourceType === "call" && matched.has("otp_pin")) score += 10;
+  return finalize(score, found);
+}
+
+function normalizeUrl(raw) {
+  raw = (raw || "").trim();
+  if (!/^[a-zA-Z][a-zA-Z0-9+.\-]*:\/\//.test(raw)) raw = "http://" + raw;
+  return raw;
+}
+
+function analyzeUrl(rawUrl) {
+  const normalized = normalizeUrl(rawUrl);
+  let host = "", path = "", isHttps = false;
+  try { const u = new URL(normalized); host = (u.hostname || "").toLowerCase(); path = u.pathname || ""; isHttps = u.protocol === "https:"; } catch (e) {}
+  const isIpHost = /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
+  const isShortener = URL_SHORTENERS.has(host);
+  const labels = host ? host.split(".") : [];
+  const subdomainCount = Math.max(0, labels.length - 2);
+  const haystack = (host + " " + path).toLowerCase();
+  let mismatch = null;
+  for (const [orgKeyword, domains] of Object.entries(KNOWN_ORG_DOMAINS)) {
+    if (haystack.includes(orgKeyword)) {
+      const ok = domains.some(d => host === d || host.endsWith("." + d));
+      if (!ok) { mismatch = orgKeyword; break; }
+    }
+  }
+  let score = 0; const found = [];
+  if (isIpHost) { score += WEIGHTS.url_ip_host; found.push(sig("url_ip_host")); }
+  if (isShortener) { score += WEIGHTS.url_shortener; found.push(sig("url_shortener")); }
+  if (!isHttps) { score += WEIGHTS.url_no_https; found.push(sig("url_no_https")); }
+  if (subdomainCount >= 3) { score += WEIGHTS.url_many_subdomains; found.push(sig("url_many_subdomains")); }
+  if (mismatch) { score += WEIGHTS.url_mismatch; found.push(sig("url_mismatch")); }
+  const result = finalize(score, found);
+  result.domain = host; result.mismatch_org = mismatch;
+  return result;
+}
+
+function combine(...results) {
+  let total = 0; const seen = new Set(); const merged = [];
+  for (const r of results) { total += r.score; for (const s of r.signals) if (!seen.has(s.id)) { seen.add(s.id); merged.push(s); } }
+  return finalize(total, merged);
+}
+
+function findFirstUrl(text) { const m = (text || "").match(/(https?:\/\/[^\s]+|www\.[^\s]+)/i); return m ? m[0] : null; }
+
+function parseUpiUri(data) {
+  if (!data || !data.toLowerCase().startsWith("upi://")) return null;
+  try {
+    const u = new URL(data);
+    const p = Object.fromEntries(u.searchParams.entries());
+    return { payee_vpa: p.pa, payee_name: p.pn, amount: p.am, note: p.tn, raw: data };
+  } catch (e) { return null; }
+}
+
+// ---- i18n + mode UI (ported from app.js) -------------------------------
+let currentMode = "message", currentLang = "en", lastResult = null, speaking = false;
+function i18n() { return STRINGS[currentLang]; }
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => { const k = el.getAttribute("data-i18n"); if (i18n()[k]) el.textContent = i18n()[k]; });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { const k = el.getAttribute("data-i18n-placeholder"); if (i18n()[k]) el.setAttribute("placeholder", i18n()[k]); });
+}
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById("lang-en").classList.toggle("active", lang === "en");
+  document.getElementById("lang-hi").classList.toggle("active", lang === "hi");
+  applyI18n();
+  if (lastResult) renderResult(lastResult);
+}
+
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentMode = btn.dataset.mode;
+    ["message","screenshot","url","qr","call"].forEach(m => document.getElementById(`panel-${m}`).classList.toggle("hidden", m !== currentMode));
+    document.getElementById("result-region").innerHTML = "";
+    lastResult = null;
+  });
+});
+
+function wirePreview(fileInputId, previewId) {
+  const input = document.getElementById(fileInputId), preview = document.getElementById(previewId);
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) { preview.classList.add("hidden"); return; }
+    const reader = new FileReader();
+    reader.onload = e => { preview.src = e.target.result; preview.classList.remove("hidden"); };
+    reader.readAsDataURL(file);
+  });
+}
+wirePreview("file-screenshot", "preview-screenshot");
+wirePreview("file-qr", "preview-qr");
+
+function setLoading(isLoading, label) {
+  const btn = document.getElementById("check-btn");
+  btn.disabled = isLoading;
+  btn.innerHTML = isLoading ? `<span class="spinner"></span>${label || i18n().button_check}` : i18n().button_check;
+}
+
+function readFileAsImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = e.target.result; };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function decodeQrFromFile(file) {
+  const img = await readFileAsImage(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width; canvas.height = img.height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = window.jsQR ? window.jsQR(imageData.data, imageData.width, imageData.height) : null;
+  return code ? code.data : null;
+}
+
+async function ocrFromFile(file) {
+  const result = await Tesseract.recognize(file, "eng");
+  return (result && result.data && result.data.text) ? result.data.text.trim() : "";
+}
+
+async function runCheck() {
+  const region = document.getElementById("result-region");
+  region.innerHTML = "";
+
+  if (currentMode === "message") {
+    const text = document.getElementById("input-message").value.trim();
+    if (!text) return;
+    const textResult = analyzeText(text, "message");
+    const url = findFirstUrl(text);
+    if (url) { const combined = combine(textResult, analyzeUrl(url)); combined.analysed_text = text; combined.url = url; renderResult(combined); }
+    else { textResult.analysed_text = text; renderResult(textResult); }
+    return;
+  }
+
+  if (currentMode === "call") {
+    const transcript = document.getElementById("input-call").value.trim();
+    if (!transcript) return;
+    const result = analyzeText(transcript, "call"); result.analysed_text = transcript; renderResult(result);
+    return;
+  }
+
+  if (currentMode === "url") {
+    const url = document.getElementById("input-url").value.trim();
+    if (!url) return;
+    const result = analyzeUrl(url); result.url = url; renderResult(result);
+    return;
+  }
+
+  if (currentMode === "screenshot") {
+    const file = document.getElementById("file-screenshot").files[0];
+    if (!file) return;
+    setLoading(true, i18n().ocr_running);
+    try {
+      const text = await ocrFromFile(file);
+      const textResult = analyzeText(text, "message");
+      const url = findFirstUrl(text);
+      if (url) { const combined = combine(textResult, analyzeUrl(url)); combined.analysed_text = text; combined.url = url; renderResult(combined); }
+      else { textResult.analysed_text = text; renderResult(textResult); }
+    } catch (e) {
+      region.innerHTML = `<p class="error-text">${i18n().ocr_failed}</p>`;
+    } finally { setLoading(false); }
+    return;
+  }
+
+  if (currentMode === "qr") {
+    const file = document.getElementById("file-qr").files[0];
+    if (!file) return;
+    try {
+      const data = await decodeQrFromFile(file);
+      if (!data) { renderResult({ no_qr_found: true }); return; }
+      const upi = parseUpiUri(data);
+      if (upi) { const base = analyzeText("scan this qr code enter your upi pin", "message"); base.qr_data = data; base.upi = upi; renderResult(base); return; }
+      if (data.toLowerCase().startsWith("http")) { const result = analyzeUrl(data); result.qr_data = data; result.url = data; renderResult(result); return; }
+      const result = analyzeText(data, "message"); result.qr_data = data; renderResult(result);
+    } catch (e) {
+      region.innerHTML = `<p class="error-text">${i18n().ocr_failed}</p>`;
+    }
+    return;
+  }
+}
+
+function riskLabel(level) { return level === "HIGH" ? i18n().result_high : level === "REVIEW" ? i18n().result_review : i18n().result_low; }
+function riskIcon(level) { return level === "HIGH" ? "⛔" : level === "REVIEW" ? "⚠️" : "✅"; }
+function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
+
+function renderResult(data) {
+  lastResult = data;
+  const region = document.getElementById("result-region");
+  if (data.no_qr_found) { region.innerHTML = `<div class="result REVIEW"><p class="action-text">${i18n().no_qr_found}</p></div>`; return; }
+
+  const level = data.risk_level || "REVIEW";
+  const why = (data.signals || []).map(s => currentLang === "hi" ? s.why_hi : s.why_en);
+  const action = currentLang === "hi" ? data.action_hi : data.action_en;
+
+  let html = `<div class="result ${level}"><span class="badge">${riskIcon(level)} ${riskLabel(level)}</span>`;
+  if (data.upi) {
+    html += `<p><strong>${i18n().upi_detected}</strong></p>`;
+    if (data.upi.payee_name || data.upi.payee_vpa) html += `<p>${i18n().upi_payee}: ${escapeHtml(data.upi.payee_name || data.upi.payee_vpa)}</p>`;
+    if (data.upi.amount) html += `<p>${i18n().upi_amount}: ₹${escapeHtml(data.upi.amount)}</p>`;
+  }
+  html += `<h3>${i18n().why_heading}</h3>`;
+  html += why.length ? "<ul>" + why.map(w => `<li>${escapeHtml(w)}</li>`).join("") + "</ul>" : `<p>${i18n().no_signals}</p>`;
+  html += `<h3>${i18n().action_heading}</h3><p class="action-text">${escapeHtml(action || "")}</p>`;
+  if (data.analysed_text) html += `<div class="detected-text-box"><strong>${i18n().detected_text}:</strong><br>${escapeHtml(data.analysed_text)}</div>`;
+  if (data.url) html += `<div class="detected-text-box"><strong>${i18n().detected_text}:</strong><br>${escapeHtml(data.url)}</div>`;
+  html += `<div class="result-actions">
+    <button class="pill-btn" onclick="toggleReadAloud()" type="button">🔊 <span id="read-aloud-label">${i18n().read_aloud}</span></button>
+    <button class="pill-btn" onclick="askTrustedPerson()" type="button">🤝 ${i18n().ask_trusted}</button>
+  </div></div>`;
+  region.innerHTML = html;
+}
+
+function summaryForShareOrSpeech() {
+  if (!lastResult) return "";
+  const level = riskLabel(lastResult.risk_level || "REVIEW");
+  const why = (lastResult.signals || []).map(s => currentLang === "hi" ? s.why_hi : s.why_en);
+  const action = currentLang === "hi" ? lastResult.action_hi : lastResult.action_en;
+  return [level, ...why, action].filter(Boolean).join(". ");
+}
+
+function toggleReadAloud() {
+  const label = document.getElementById("read-aloud-label");
+  if (speaking) { window.speechSynthesis.cancel(); speaking = false; if (label) label.textContent = i18n().read_aloud; return; }
+  const text = summaryForShareOrSpeech();
+  if (!text || !("speechSynthesis" in window)) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = currentLang === "hi" ? "hi-IN" : "en-IN";
+  utter.onend = () => { speaking = false; if (label) label.textContent = i18n().read_aloud; };
+  speaking = true; if (label) label.textContent = i18n().stop_reading;
+  window.speechSynthesis.speak(utter);
+}
+
+function askTrustedPerson() {
+  const summary = `${i18n().trusted_intro}\n\n${summaryForShareOrSpeech()}`;
+  if (navigator.share) { navigator.share({ title: i18n().app_name, text: summary }).catch(() => {}); }
+  else { window.open(`https://wa.me/?text=${encodeURIComponent(summary)}`, "_blank"); }
+}
+
+applyI18n();
+</script>
+</body>
+</html>
